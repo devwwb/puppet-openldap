@@ -8,6 +8,18 @@ class openldap::client::config {
     undef   => undef,
     default => "set BIND_POLICY ${::openldap::client::bind_policy}",
   }
+  $bind_timelimit = $::openldap::client::bind_timelimit ? {
+    undef   => undef,
+    default => "set BIND_TIMELIMIT ${::openldap::client::bind_timelimit}",
+  }
+  $binddn = $::openldap::client::binddn ? {
+    undef   => undef,
+    default => "set BINDDN ${::openldap::client::binddn}",
+  }
+  $bindpw = $::openldap::client::bindpw ? {
+    undef   => undef,
+    default => "set BINDPW ${::openldap::client::bindpw}",
+  }
   $ldap_version = $::openldap::client::ldap_version ? {
     undef   => undef,
     default => "set LDAP_VERSION ${::openldap::client::ldap_version}",
@@ -23,6 +35,14 @@ class openldap::client::config {
   $suffix = $::openldap::client::suffix ? {
     undef   => undef,
     default => "set SUFFIX ${::openldap::client::suffix}",
+  }
+  $timelimit = $::openldap::client::timelimit ? {
+    undef   => undef,
+    default => "set TIMELIMIT ${::openldap::client::timelimit}",
+  }
+  $timeout = $::openldap::client::timeout ? {
+    undef   => undef,
+    default => "set TIMEOUT ${::openldap::client::timeout}",
   }
   $_uri = $::openldap::client::uri ? {
     undef   => undef,
@@ -86,13 +106,22 @@ class openldap::client::config {
     undef   => undef,
     default => "set TLS_REQCERT ${::openldap::client::tls_reqcert}",
   }
+  $sudoers_base = $::openldap::client::sudoers_base ? {
+    undef   => undef,
+    default => "set SUDOERS_BASE ${::openldap::client::sudoers_base}",
+  }
   $changes = delete_undef_values([
     $base,
     $bind_policy,
+    $bind_timelimit,
+    $binddn,
+    $bindpw,
     $ldap_version,
     $scope,
     $ssl,
     $suffix,
+    $timelimit,
+    $timeout,
     $uri,
     $nss_base_group,
     $nss_base_hosts,
@@ -106,6 +135,7 @@ class openldap::client::config {
     $tls_cacert,
     $tls_cacertdir,
     $tls_reqcert,
+    $sudoers_base,
   ])
   augeas { 'ldap.conf':
     incl    => $::openldap::client::file,
