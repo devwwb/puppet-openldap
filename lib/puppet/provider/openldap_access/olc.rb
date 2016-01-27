@@ -46,7 +46,7 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
             :what     => what,
             :access   => access,
             :suffix   => suffix,
-            :islast   => islast,
+            :islast   => islast
           )
         end
       end
@@ -59,9 +59,8 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
     accesses = instances
     resources.keys.each do |name|
       if provider = accesses.find{ |access|
-        access.what == resources[name][:what] &&
-          access.by == resources[name][:by] &&
-          access.suffix == resources[name][:suffix]
+        access.suffix == resources[name][:suffix] &&
+        access.position == resources[name][:position]
       }
         resources[name].provider = provider
       end
@@ -107,7 +106,11 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
     t = Tempfile.new('openldap_access')
     t << "dn: #{self.class.getDn(resource[:suffix])}\n"
     t << "add: olcAccess\n"
-    t << "olcAccess: {#{resource[:position]}}to #{resource[:what]}\n"
+    if resource[:position]
+      t << "olcAccess: {#{resource[:position]}}to #{resource[:what]}\n"
+    else
+      t << "olcAccess: to #{resource[:what]}\n"
+    end
     resource[:access].each do |a|
       t << "  #{a}\n"
     end
@@ -208,9 +211,14 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
       t << "dn: #{self.class.getDn(resource[:suffix])}\n"
       t << "changetype: modify\n"
       t << "replace: olcAccess\n"
+      if resource[:position]
+        position = resource[:position]
+      else
+        position = @property_hash[:position]
+      end
       current_olcAccess.each do |olcAccess|
-        if olcAccess[:position].to_i == resource[:position].to_i
-          t << "olcAccess: {#{resource[:position]}}to #{resource[:what]}\n"
+        if olcAccess[:position].to_i == position.to_i
+          t << "olcAccess: {#{position}}to #{resource[:what]}\n"
           resource[:access].each do |a|
             t << "  #{a}\n"
           end
@@ -219,10 +227,10 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
         end
       end
       countOfElement = self.class.getCountOfOlcAccess(resource[:suffix])
-      if resource[:islast] and countOfElement > resource[:position].to_i+1
+      if resource[:islast] and countOfElement > position.to_i+1
         t << "-\n"
         t << "delete: olcAccess\n"
-        (resource[:position].to_i+1..countOfElement-1).each do |n|
+        (position.to_i+1..countOfElement-1).each do |n|
           t << "olcAccess: {#{n}}\n"
         end
       end
