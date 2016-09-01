@@ -23,10 +23,54 @@ Puppet::Type.newtype(:openldap_access) do
     desc "The suffix to which the access applies"
   end
 
+  newproperty(:position) do
+    desc "Where to place the new entry"
+  end
+
+  newproperty(:access, :array_matching => :all ) do
+    desc "Access rule."
+  end
+
   def self.title_patterns
     [
       [
-        /^((\S+)\s+on\s+(.+))$/,
+        /^({(\d+)}to\s+(\S+)\s+(by\s+.+)\s+on\s+(.+))$/,
+        [
+          [ :name, lambda{|x| x} ],
+          [ :position, lambda{|x| x} ],
+          [ :what, lambda{|x| x} ],
+          [ :access, lambda{ |x| a=[]; x.split(/(?= by .+)/).each { |b| a << b.lstrip }; a } ],
+          [ :suffix, lambda{|x| x} ],
+        ],
+      ],
+      [
+        /^({(\d+)}to\s+(\S+)\s+(by\s+.+)\s+)$/,
+        [
+          [ :name, lambda{|x| x} ],
+          [ :position, lambda{|x| x} ],
+          [ :what, lambda{|x| x} ],
+          [ :access, lambda{ |x| a=[]; x.split(/(?= by .+)/).each { |b| a << b.lstrip }; a } ],
+        ],
+      ],
+      [
+        /^(to\s+(\S+)\s+(by\s+.+)\s+on\s+(.+))$/,
+        [
+          [ :name, lambda{|x| x} ],
+          [ :what, lambda{|x| x} ],
+          [ :access, lambda{ |x| a=[]; x.split(/(?= by .+)/).each { |b| a << b.lstrip }; a } ],
+          [ :suffix, lambda{|x| x} ],
+        ],
+      ],
+      [
+        /^(to\s+(\S+)\s+(by\s+.+))$/,
+        [
+          [ :name, lambda{|x| x} ],
+          [ :what, lambda{|x| x} ],
+          [ :access, lambda{ |x| a=[]; x.split(/(?= by .+)/).each { |b| a << b.lstrip }; a } ],
+        ],
+      ],
+      [
+        /^((\d+)\s+on\s+(.+))$/,
         [
           [ :name, lambda{|x| x} ],
           [ :position, lambda{|x| x} ],
@@ -40,14 +84,7 @@ Puppet::Type.newtype(:openldap_access) do
         ],
       ],
     ]
-  end
 
-  newproperty(:position) do
-    desc "Where to place the new entry"
-  end
-
-  newproperty(:access, :array_matching => :all) do
-    desc "Access rule."
   end
 
   autorequire(:openldap_database) do

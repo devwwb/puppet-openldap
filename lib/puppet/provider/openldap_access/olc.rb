@@ -36,7 +36,7 @@ Puppet::Type.
             islast = false
           end
           i << new(
-            :name     => "#{position} on #{suffix}",
+            :name     => "{#{position}}to #{what} #{access.join(' ')} on #{suffix}",
             :ensure   => :present,
             :position => position,
             :what     => what,
@@ -55,10 +55,30 @@ Puppet::Type.
     accesses = instances
     resources.keys.each do |name|
       if provider = accesses.find{ |access|
-        access.suffix == resources[name][:suffix] &&
-        access.position == resources[name][:position]
+        if resources[name][:position]
+          access.suffix == resources[name][:suffix] &&
+          access.position == resources[name][:position]
+        else
+          access.suffix == resources[name][:suffix] &&
+          access.access == resources[name][:access] &&
+          access.what == resources[name][:what]
+        end
       }
         resources[name].provider = provider
+      end
+      validate_islast(resources)
+    end
+  end
+
+  def self.validate_islast(resources)
+    islast = {}
+    resources.keys.each do |name|
+      if resources[name][:islast] == true
+        if islast[:suffix].nil?
+          islast[:suffix] = resources[name][:suffix]
+        else
+          raise Puppet::Error, "Multiple 'islast' found for suffix '#{islast[:suffix]}'"
+        end
       end
     end
   end
@@ -155,7 +175,10 @@ Puppet::Type.
     t << "olcAccess: {#{@property_hash[:position]}}\n"
     t << "-\n"
     t << "add: olcAccess\n"
-    t << "olcAccess: {#{@property_hash[:position]}}to #{resource[:what]} by #{resource[:by]} #{resource[:access]}\n"
+    t << "olcAccess: {#{@property_hash[:position]}}to #{resource[:what]}\n"
+    resource[:access].each do |a|
+      t << "  #{a}\n"
+    end
     t.close
     Puppet.debug(IO.read t.path)
     begin
