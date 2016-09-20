@@ -5,7 +5,6 @@ define openldap::server::access(
   $what     = undef,
   $suffix   = undef,
   $access   = undef,
-  $islast   = false,
 ) {
 
   if ! defined(Class['openldap::server']) {
@@ -30,6 +29,5 @@ define openldap::server::access(
     what     => $what,
     suffix   => $suffix,
     access   => $access,
-    islast   => $islast,
   }
 }
